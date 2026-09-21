@@ -9,9 +9,12 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
+import { Switch } from "@/components/ui/switch"
 import { useDiagram } from "@/contexts/diagram-context"
+import useDictionary from "@/hooks/use-dictionary"
 import { type DrawioTheme, isDrawioTheme } from "@/lib/drawio-themes"
 import { i18n, type Locale } from "@/lib/i18n/config"
+import { STORAGE_KEYS } from "@/lib/storage"
 
 export default function Home() {
     const {
@@ -23,10 +26,14 @@ export default function Home() {
     } = useDiagram()
     const router = useRouter()
     const pathname = usePathname()
+    const dict = useDictionary()
     // Extract current language from pathname (e.g., "/zh/about" → "zh")
     const currentLang = (pathname.split("/")[1] || i18n.defaultLocale) as Locale
     const [isMobile, setIsMobile] = useState(false)
     const [isChatVisible, setIsChatVisible] = useState(true)
+    // AI Assistant mode. Defaults to OFF: the editor must work as a normal
+    // draw.io canvas with no AI calls until the user explicitly opts in.
+    const [aiEnabled, setAiEnabled] = useState(false)
     const [drawioUi, setDrawioUi] = useState<DrawioTheme>("kennedy")
     const [darkMode, setDarkMode] = useState(false)
     const [isLoaded, setIsLoaded] = useState(false)
@@ -56,6 +63,11 @@ export default function Home() {
         const savedUi = localStorage.getItem("drawio-theme")
         if (isDrawioTheme(savedUi)) {
             setDrawioUi(savedUi)
+        }
+
+        const savedAiEnabled = localStorage.getItem(STORAGE_KEYS.aiEnabled)
+        if (savedAiEnabled !== null) {
+            setAiEnabled(savedAiEnabled === "true")
         }
 
         const savedDarkMode = localStorage.getItem("next-ai-draw-io-dark-mode")
@@ -129,6 +141,7 @@ export default function Home() {
     }, [resetDrawioReady])
 
     const toggleChatPanel = () => {
+        if (!aiEnabled) return
         const panel = chatPanelRef.current
         if (panel) {
             if (panel.isCollapsed()) {
@@ -140,6 +153,31 @@ export default function Home() {
             }
         }
     }
+
+    const handleAiEnabledChange = (enabled: boolean) => {
+        setAiEnabled(enabled)
+        localStorage.setItem(STORAGE_KEYS.aiEnabled, String(enabled))
+    }
+
+    // Keep the AI panel's collapsed state in sync with the AI mode switch.
+    // Turning AI off fully hides the panel (canvas takes the full width);
+    // turning it on restores the panel without touching the drawio canvas,
+    // so the current diagram is never reloaded or lost.
+    useEffect(() => {
+        const panel = chatPanelRef.current
+        if (!panel) return
+        if (aiEnabled) {
+            if (panel.isCollapsed()) {
+                panel.expand()
+            }
+            setIsChatVisible(true)
+        } else {
+            if (!panel.isCollapsed()) {
+                panel.collapse()
+            }
+            setIsChatVisible(false)
+        }
+    }, [aiEnabled])
 
     // Keyboard shortcut for toggling chat panel
     useEffect(() => {
@@ -155,11 +193,42 @@ export default function Home() {
     }, [])
 
     return (
-        <div className="h-screen bg-background relative overflow-hidden">
+        <div className="h-screen bg-background relative overflow-hidden flex flex-col">
+            {/* Header: app title + AI mode switch. Visible at all times so the
+                user can always tell, and change, whether AI is active. */}
+            <header className="flex items-center justify-between gap-3 px-3 py-1.5 border-b border-border/30 shrink-0">
+                <span className="text-sm font-semibold text-foreground">
+                    next-ai-draw-io
+                </span>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <span className="text-xs font-medium text-muted-foreground">
+                        {dict.aiMode.label}:{" "}
+                        <span
+                            className={
+                                aiEnabled
+                                    ? "text-primary font-semibold"
+                                    : "font-semibold"
+                            }
+                        >
+                            {aiEnabled ? dict.aiMode.on : dict.aiMode.off}
+                        </span>
+                    </span>
+                    <Switch
+                        id="ai-mode-switch"
+                        checked={aiEnabled}
+                        onCheckedChange={handleAiEnabledChange}
+                        aria-label={
+                            aiEnabled
+                                ? dict.aiMode.toggleOff
+                                : dict.aiMode.toggleOn
+                        }
+                    />
+                </label>
+            </header>
             <ResizablePanelGroup
                 id="main-panel-group"
                 direction={isMobile ? "vertical" : "horizontal"}
-                className="h-full"
+                className="flex-1 min-h-0"
             >
                 <ResizablePanel
                     id="drawio-panel"
@@ -213,40 +282,52 @@ export default function Home() {
                     </div>
                 </ResizablePanel>
 
-                <ResizableHandle withHandle />
+                <ResizableHandle
+                    withHandle={aiEnabled}
+                    disabled={!aiEnabled}
+                    className={
+                        aiEnabled ? undefined : "w-0 pointer-events-none"
+                    }
+                />
 
-                {/* Chat Panel */}
+                {/* AI Assistant Panel — fully collapsed and unmounted when AI
+                    mode is off, so the canvas gets the full width and no AI
+                    code runs or calls out. */}
                 <ResizablePanel
                     key={isMobile ? "mobile" : "desktop"}
                     id="chat-panel"
                     ref={chatPanelRef}
-                    defaultSize={isMobile ? 50 : 33}
+                    defaultSize={aiEnabled ? (isMobile ? 50 : 33) : 0}
                     minSize={isMobile ? 20 : 15}
                     maxSize={isMobile ? 80 : 50}
-                    collapsible={!isMobile}
-                    collapsedSize={isMobile ? 0 : 3}
+                    collapsible
+                    collapsedSize={!aiEnabled ? 0 : isMobile ? 0 : 3}
                     onCollapse={() => setIsChatVisible(false)}
                     onExpand={() => setIsChatVisible(true)}
                 >
-                    <div className={`h-full ${isMobile ? "p-1" : "py-2 pr-2"}`}>
-                        <Suspense
-                            fallback={
-                                <div className="h-full bg-card rounded-xl border border-border/30 flex items-center justify-center text-muted-foreground">
-                                    Loading chat...
-                                </div>
-                            }
+                    {aiEnabled && (
+                        <div
+                            className={`h-full ${isMobile ? "p-1" : "py-2 pr-2"}`}
                         >
-                            <ChatPanel
-                                isVisible={isChatVisible}
-                                onToggleVisibility={toggleChatPanel}
-                                drawioUi={drawioUi}
-                                onDrawioUiChange={handleDrawioUiChange}
-                                darkMode={darkMode}
-                                onToggleDarkMode={handleDarkModeChange}
-                                isMobile={isMobile}
-                            />
-                        </Suspense>
-                    </div>
+                            <Suspense
+                                fallback={
+                                    <div className="h-full bg-card rounded-xl border border-border/30 flex items-center justify-center text-muted-foreground">
+                                        Loading chat...
+                                    </div>
+                                }
+                            >
+                                <ChatPanel
+                                    isVisible={isChatVisible}
+                                    onToggleVisibility={toggleChatPanel}
+                                    drawioUi={drawioUi}
+                                    onDrawioUiChange={handleDrawioUiChange}
+                                    darkMode={darkMode}
+                                    onToggleDarkMode={handleDarkModeChange}
+                                    isMobile={isMobile}
+                                />
+                            </Suspense>
+                        </div>
+                    )}
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>

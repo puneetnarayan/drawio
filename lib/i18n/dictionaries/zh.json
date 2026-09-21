@@ -553,5 +553,13 @@
                 "description": "每日重置边界所用的时区。"
             }
         }
+    },
+    "aiMode": {
+        "label": "AI",
+        "on": "开启",
+        "off": "关闭",
+        "toggleOn": "开启 AI 助手",
+        "toggleOff": "关闭 AI 助手",
+        "notConfigured": "AI 已开启 — 未配置"
     }
 }

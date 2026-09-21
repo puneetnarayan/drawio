@@ -38,4 +38,7 @@ export const STORAGE_KEYS = {
     showRecentChats: "next-ai-draw-io-show-recent-chats",
     showMyTemplates: "next-ai-draw-io-show-my-templates",
     showQuickExamples: "next-ai-draw-io-show-quick-examples",
+
+    // AI assistant mode (on/off). Default is OFF — see aiEnabled default in page.tsx.
+    aiEnabled: "next-ai-draw-io-ai-enabled",
 } as const

@@ -553,5 +553,13 @@
                 "description": "1 日のリセット境界に使用するタイムゾーン。"
             }
         }
+    },
+    "aiMode": {
+        "label": "AI",
+        "on": "ON",
+        "off": "OFF",
+        "toggleOn": "AIアシスタントをオンにする",
+        "toggleOff": "AIアシスタントをオフにする",
+        "notConfigured": "AI ON — 未設定"
     }
 }

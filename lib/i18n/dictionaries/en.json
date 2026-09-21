@@ -553,5 +553,13 @@
                 "description": "Timezone for the daily reset boundary."
             }
         }
+    },
+    "aiMode": {
+        "label": "AI",
+        "on": "ON",
+        "off": "OFF",
+        "toggleOn": "Turn AI Assistant on",
+        "toggleOff": "Turn AI Assistant off",
+        "notConfigured": "AI ON — Not Configured"
     }
 }
