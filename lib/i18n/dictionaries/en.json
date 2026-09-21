@@ -138,7 +138,19 @@
         "panelVisibilityDescription": "Choose which panels to show on the chat lobby.",
         "showRecentChats": "Recent Chats",
         "showMyTemplates": "My Templates",
-        "showQuickExamples": "Quick Examples"
+        "showQuickExamples": "Quick Examples",
+        "githubSave": {
+            "title": "GitHub Save Folder",
+            "description": "Save diagrams straight to a folder in a GitHub repository. Your token is stored locally in this browser only and is sent directly to GitHub, never to this app's server.",
+            "owner": "Repository owner",
+            "repo": "Repository name",
+            "branch": "Branch (optional, defaults to the repo's default branch)",
+            "folder": "Folder path (optional, repo root if empty)",
+            "token": "Personal access token",
+            "tokenPlaceholder": "ghp_... or a fine-grained token with Contents read/write",
+            "save": "Save",
+            "saved": "GitHub save settings saved."
+        }
     },
     "save": {
         "title": "Save Diagram",
@@ -152,7 +164,16 @@
             "svg": "SVG Image",
             "xmlsvg": "Editable SVG"
         },
-        "savedSuccessfully": "Saved successfully!"
+        "savedSuccessfully": "Saved successfully!",
+        "destination": "Save to",
+        "destinations": {
+            "device": "My Computer",
+            "googleDrive": "Google Drive",
+            "oneDrive": "OneDrive",
+            "github": "GitHub"
+        },
+        "notConfigured": "Not configured",
+        "configureInSettings": "Configure in Settings to enable."
     },
     "history": {
         "title": "Diagram History",

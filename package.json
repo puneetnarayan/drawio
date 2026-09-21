@@ -43,6 +43,7 @@
         "@aihubmix/ai-sdk-provider": "^2.1.0",
         "@aws-sdk/client-dynamodb": "^3.957.0",
         "@aws-sdk/credential-providers": "^3.943.0",
+        "@azure/msal-browser": "^5.22.0",
         "@extractus/article-extractor": "^8.0.18",
         "@formatjs/intl-localematcher": "^0.8.0",
         "@langfuse/client": "^4.4.9",

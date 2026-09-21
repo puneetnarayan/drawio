@@ -25,6 +25,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/hooks/use-dictionary"
 import { getApiEndpoint } from "@/lib/base-path"
+import type { GitHubSaveConfig } from "@/lib/cloud-storage/types"
 import type { DrawioTheme } from "@/lib/drawio-themes"
 import { i18n, type Locale } from "@/lib/i18n/config"
 import { STORAGE_KEYS } from "@/lib/storage"
@@ -50,6 +51,92 @@ function SettingItem({
                 )}
             </div>
             <div className="shrink-0">{children}</div>
+        </div>
+    )
+}
+
+// Save-to-GitHub folder settings. Stored entirely in localStorage: the
+// token is sent directly from the browser to api.github.com and never
+// touches this app's own server (same trust model as the AI BYOK keys).
+function GitHubSaveSettings() {
+    const dict = useDictionary()
+    const [config, setConfig] = useState<Partial<GitHubSaveConfig>>({})
+
+    useEffect(() => {
+        const raw = localStorage.getItem(STORAGE_KEYS.githubSaveConfig)
+        if (raw) {
+            try {
+                setConfig(JSON.parse(raw))
+            } catch {
+                // ignore malformed stored value
+            }
+        }
+    }, [])
+
+    const updateField = (field: keyof GitHubSaveConfig, value: string) => {
+        setConfig((prev) => ({ ...prev, [field]: value }))
+    }
+
+    const handleSave = () => {
+        localStorage.setItem(
+            STORAGE_KEYS.githubSaveConfig,
+            JSON.stringify(config),
+        )
+        toast.success(dict.settings.githubSave.saved)
+    }
+
+    return (
+        <div className="py-4 space-y-3">
+            <div className="space-y-0.5">
+                <Label className="text-sm font-medium">
+                    {dict.settings.githubSave.title}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                    {dict.settings.githubSave.description}
+                </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+                <Input
+                    value={config.owner || ""}
+                    onChange={(e) => updateField("owner", e.target.value)}
+                    placeholder={dict.settings.githubSave.owner}
+                    className="h-9 text-sm"
+                />
+                <Input
+                    value={config.repo || ""}
+                    onChange={(e) => updateField("repo", e.target.value)}
+                    placeholder={dict.settings.githubSave.repo}
+                    className="h-9 text-sm"
+                />
+                <Input
+                    value={config.branch || ""}
+                    onChange={(e) => updateField("branch", e.target.value)}
+                    placeholder={dict.settings.githubSave.branch}
+                    className="h-9 text-sm col-span-2"
+                />
+                <Input
+                    value={config.folder || ""}
+                    onChange={(e) => updateField("folder", e.target.value)}
+                    placeholder={dict.settings.githubSave.folder}
+                    className="h-9 text-sm col-span-2"
+                />
+                <Input
+                    type="password"
+                    value={config.token || ""}
+                    onChange={(e) => updateField("token", e.target.value)}
+                    placeholder={dict.settings.githubSave.tokenPlaceholder}
+                    className="h-9 text-sm col-span-2 font-mono"
+                    autoComplete="off"
+                />
+            </div>
+            <Button
+                onClick={handleSave}
+                variant="outline"
+                size="sm"
+                className="h-8"
+            >
+                {dict.settings.githubSave.save}
+            </Button>
         </div>
     )
 }
@@ -649,6 +736,9 @@ function SettingsContent({
                             </SelectContent>
                         </Select>
                     </SettingItem>
+
+                    {/* GitHub Save Folder */}
+                    <GitHubSaveSettings />
 
                     {/* Proxy Settings - Electron only */}
                     {typeof window !== "undefined" &&

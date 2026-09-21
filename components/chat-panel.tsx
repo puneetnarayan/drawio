@@ -1451,6 +1451,7 @@ export default function ChatPanel({
                     showUnvalidatedModels={modelConfig.showUnvalidatedModels}
                     shouldFocus={shouldFocusInput}
                     onFocused={() => setShouldFocusInput(false)}
+                    onOpenSettings={() => setShowSettingsDialog(true)}
                 />
             </footer>
 

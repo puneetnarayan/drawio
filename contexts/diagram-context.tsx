@@ -6,7 +6,17 @@ import type { DrawIoEmbedRef, EventExport } from "react-drawio"
 import { toast } from "sonner"
 import type { ExportFormat } from "@/components/save-dialog"
 import { getApiEndpoint } from "@/lib/base-path"
+import { uploadToGitHub } from "@/lib/cloud-storage/github"
+import { uploadToGoogleDrive } from "@/lib/cloud-storage/google-drive"
+import { uploadToOneDrive } from "@/lib/cloud-storage/onedrive"
 import {
+    isGitHubSaveConfigComplete,
+    type SaveDestination,
+} from "@/lib/cloud-storage/types"
+import { STORAGE_KEYS } from "@/lib/storage"
+import {
+    dataUrlToBlob,
+    downloadBlob,
     extractDiagramXML,
     isRealDiagram,
     validateAndFixXml,
@@ -30,6 +40,7 @@ interface DiagramContextType {
         format: ExportFormat,
         sessionId?: string,
         successMessage?: string,
+        destination?: SaveDestination,
     ) => void
     getThumbnailSvg: () => Promise<string | null>
     captureValidationPng: () => Promise<string | null>
@@ -279,6 +290,7 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         format: ExportFormat,
         sessionId?: string,
         successMessage?: string,
+        destination: SaveDestination = "device",
     ) => {
         if (!drawioRef.current) {
             console.warn("Draw.io editor not ready")
@@ -328,44 +340,84 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
                 // Log save event to Langfuse (flags the trace)
                 logSaveToLangfuse(filename, format, sessionId)
 
-                // Handle download
-                let url: string
-                if (
+                const blob =
                     typeof fileContent === "string" &&
                     fileContent.startsWith("data:")
-                ) {
-                    // Already a data URL (PNG)
-                    url = fileContent
-                } else {
-                    const blob = new Blob([fileContent], { type: mimeType })
-                    url = URL.createObjectURL(blob)
+                        ? dataUrlToBlob(fileContent, mimeType)
+                        : new Blob([fileContent], { type: mimeType })
+                const fullFilename = `${filename}${extension}`
+
+                if (destination === "device") {
+                    downloadBlob(blob, fullFilename)
+                    if (successMessage) {
+                        toast.success(successMessage, {
+                            position: "bottom-left",
+                            duration: 2500,
+                        })
+                    }
+                    return
                 }
 
-                const a = document.createElement("a")
-                a.href = url
-                a.download = `${filename}${extension}`
-                document.body.appendChild(a)
-                a.click()
-                document.body.removeChild(a)
-
-                // Show success toast after download is initiated
-                if (successMessage) {
-                    toast.success(successMessage, {
-                        position: "bottom-left",
-                        duration: 2500,
+                saveToCloudDestination(
+                    destination,
+                    fullFilename,
+                    blob,
+                    mimeType,
+                )
+                    .then(() => {
+                        if (successMessage) {
+                            toast.success(successMessage, {
+                                position: "bottom-left",
+                                duration: 2500,
+                            })
+                        }
                     })
-                }
-
-                // Delay URL revocation to ensure download completes
-                if (!url.startsWith("data:")) {
-                    setTimeout(() => URL.revokeObjectURL(url), 100)
-                }
+                    .catch((error: unknown) => {
+                        console.error(
+                            `Failed to save diagram to ${destination}:`,
+                            error,
+                        )
+                        toast.error(
+                            error instanceof Error
+                                ? error.message
+                                : `Failed to save to ${destination}`,
+                            { position: "bottom-left", duration: 4000 },
+                        )
+                    })
             },
             format,
         }
 
         // Export diagram - callback will be handled in handleDiagramExport
         drawioRef.current.exportDiagram({ format: drawioFormat })
+    }
+
+    async function saveToCloudDestination(
+        destination: SaveDestination,
+        filename: string,
+        blob: Blob,
+        mimeType: string,
+    ): Promise<void> {
+        if (destination === "google-drive") {
+            await uploadToGoogleDrive(filename, blob)
+            return
+        }
+        if (destination === "onedrive") {
+            await uploadToOneDrive(filename, blob, mimeType)
+            return
+        }
+        if (destination === "github") {
+            const raw = localStorage.getItem(STORAGE_KEYS.githubSaveConfig)
+            const config = raw ? JSON.parse(raw) : null
+            if (!isGitHubSaveConfigComplete(config)) {
+                throw new Error(
+                    "GitHub save is not configured. Add a repository and token in Settings.",
+                )
+            }
+            await uploadToGitHub(config, filename, blob)
+            return
+        }
+        throw new Error(`Unknown save destination: ${destination}`)
     }
 
     // Log save event to Langfuse (just flags the trace, doesn't send content)

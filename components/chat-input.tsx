@@ -177,6 +177,7 @@ interface ChatInputProps {
     // Focus control props
     shouldFocus?: boolean
     onFocused?: () => void
+    onOpenSettings?: () => void
 }
 
 export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
@@ -201,6 +202,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
             showUnvalidatedModels = false,
             shouldFocus = false,
             onFocused,
+            onOpenSettings,
         },
         ref,
     ) {
@@ -606,17 +608,19 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                 <SaveDialog
                     open={showSaveDialog}
                     onOpenChange={setShowSaveDialog}
-                    onSave={(filename, format) =>
+                    onSave={(filename, format, destination) =>
                         saveDiagramToFile(
                             filename,
                             format,
                             sessionId,
                             dict.save.savedSuccessfully,
+                            destination,
                         )
                     }
                     defaultFilename={`diagram-${new Date()
                         .toISOString()
                         .slice(0, 10)}`}
+                    onOpenSettings={onOpenSettings}
                 />
                 {onUrlChange && (
                     <UrlInputDialog

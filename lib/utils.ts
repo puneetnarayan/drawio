@@ -10,6 +10,31 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // ============================================================================
+// File helpers (shared by local download and cloud save destinations)
+// ============================================================================
+
+export function dataUrlToBlob(dataUrl: string, mimeType: string): Blob {
+    const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1)
+    const binary = atob(base64)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i)
+    }
+    return new Blob([bytes], { type: mimeType })
+}
+
+export function downloadBlob(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 100)
+}
+
+// ============================================================================
 // Diagram Constants
 // ============================================================================
 

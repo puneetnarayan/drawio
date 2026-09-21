@@ -19,14 +19,26 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { useDictionary } from "@/hooks/use-dictionary"
+import { isGoogleDriveConfigured } from "@/lib/cloud-storage/google-drive"
+import { isOneDriveConfigured } from "@/lib/cloud-storage/onedrive"
+import {
+    isGitHubSaveConfigComplete,
+    type SaveDestination,
+} from "@/lib/cloud-storage/types"
+import { STORAGE_KEYS } from "@/lib/storage"
 
 export type ExportFormat = "drawio" | "png" | "svg" | "xmlsvg"
 
 interface SaveDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
-    onSave: (filename: string, format: ExportFormat) => void
+    onSave: (
+        filename: string,
+        format: ExportFormat,
+        destination: SaveDestination,
+    ) => void
     defaultFilename: string
+    onOpenSettings?: () => void
 }
 
 export function SaveDialog({
@@ -34,20 +46,62 @@ export function SaveDialog({
     onOpenChange,
     onSave,
     defaultFilename,
+    onOpenSettings,
 }: SaveDialogProps) {
     const dict = useDictionary()
     const [filename, setFilename] = useState(defaultFilename)
     const [format, setFormat] = useState<ExportFormat>("drawio")
+    const [destination, setDestination] = useState<SaveDestination>("device")
+    const [isGitHubConfigured, setIsGitHubConfigured] = useState(false)
 
     useEffect(() => {
         if (open) {
             setFilename(defaultFilename)
+            const raw = localStorage.getItem(STORAGE_KEYS.githubSaveConfig)
+            setIsGitHubConfigured(
+                isGitHubSaveConfigComplete(raw ? JSON.parse(raw) : null),
+            )
+            const lastDestination = localStorage.getItem(
+                STORAGE_KEYS.lastSaveDestination,
+            ) as SaveDestination | null
+            setDestination(lastDestination || "device")
         }
     }, [open, defaultFilename])
 
+    const DESTINATION_OPTIONS: {
+        value: SaveDestination
+        label: string
+        available: boolean
+    }[] = [
+        {
+            value: "device",
+            label: dict.save.destinations.device,
+            available: true,
+        },
+        {
+            value: "google-drive",
+            label: dict.save.destinations.googleDrive,
+            available: isGoogleDriveConfigured(),
+        },
+        {
+            value: "onedrive",
+            label: dict.save.destinations.oneDrive,
+            available: isOneDriveConfigured(),
+        },
+        {
+            value: "github",
+            label: dict.save.destinations.github,
+            available: isGitHubConfigured,
+        },
+    ]
+    const currentDestination = DESTINATION_OPTIONS.find(
+        (d) => d.value === destination,
+    )
+
     const handleSave = () => {
         const finalFilename = filename.trim() || defaultFilename
-        onSave(finalFilename, format)
+        localStorage.setItem(STORAGE_KEYS.lastSaveDestination, destination)
+        onSave(finalFilename, format, destination)
         onOpenChange(false)
     }
 
@@ -93,6 +147,51 @@ export function SaveDialog({
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                            {dict.save.destination}
+                        </label>
+                        <Select
+                            value={destination}
+                            onValueChange={(v) =>
+                                setDestination(v as SaveDestination)
+                            }
+                        >
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {DESTINATION_OPTIONS.map((opt) => (
+                                    <SelectItem
+                                        key={opt.value}
+                                        value={opt.value}
+                                    >
+                                        {opt.label}
+                                        {!opt.available &&
+                                            ` (${dict.save.notConfigured})`}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {currentDestination &&
+                            !currentDestination.available && (
+                                <p className="text-xs text-muted-foreground">
+                                    {dict.save.configureInSettings}
+                                    {onOpenSettings && (
+                                        <button
+                                            type="button"
+                                            className="ml-1 underline underline-offset-2 hover:text-foreground"
+                                            onClick={() => {
+                                                onOpenChange(false)
+                                                onOpenSettings()
+                                            }}
+                                        >
+                                            {dict.settings.title}
+                                        </button>
+                                    )}
+                                </p>
+                            )}
+                    </div>
                     <div className="space-y-2">
                         <label className="text-sm font-medium">
                             {dict.save.format}
@@ -143,7 +242,12 @@ export function SaveDialog({
                     >
                         {dict.common.cancel}
                     </Button>
-                    <Button onClick={handleSave}>{dict.common.save}</Button>
+                    <Button
+                        onClick={handleSave}
+                        disabled={!currentDestination?.available}
+                    >
+                        {dict.common.save}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

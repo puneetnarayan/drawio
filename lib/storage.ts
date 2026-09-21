@@ -41,4 +41,8 @@ export const STORAGE_KEYS = {
 
     // AI assistant mode (on/off). Default is OFF — see aiEnabled default in page.tsx.
     aiEnabled: "next-ai-draw-io-ai-enabled",
+
+    // Save destinations
+    lastSaveDestination: "next-ai-draw-io-last-save-destination",
+    githubSaveConfig: "next-ai-draw-io-github-save-config",
 } as const

@@ -138,7 +138,19 @@
         "panelVisibilityDescription": "チャットロビーに表示するパネルを選択します。",
         "showRecentChats": "最近のチャット",
         "showMyTemplates": "マイテンプレート",
-        "showQuickExamples": "クイック例"
+        "showQuickExamples": "クイック例",
+        "githubSave": {
+            "title": "GitHub 保存フォルダ",
+            "description": "図を GitHub リポジトリ内のフォルダに直接保存します。トークンはこのブラウザにのみローカル保存され、GitHub に直接送信されます（本アプリのサーバーには送信されません）。",
+            "owner": "リポジトリオーナー",
+            "repo": "リポジトリ名",
+            "branch": "ブランチ（任意、省略時はリポジトリの既定ブランチ）",
+            "folder": "フォルダパス（任意、空欄でリポジトリのルート）",
+            "token": "個人用アクセストークン",
+            "tokenPlaceholder": "ghp_... または Contents の読み書き権限を持つ fine-grained トークン",
+            "save": "保存",
+            "saved": "GitHub 保存設定を保存しました。"
+        }
     },
     "save": {
         "title": "ダイアグラムを保存",
@@ -152,7 +164,16 @@
             "svg": "SVG 画像",
             "xmlsvg": "編集可能 SVG"
         },
-        "savedSuccessfully": "保存完了！"
+        "savedSuccessfully": "保存完了！",
+        "destination": "保存先",
+        "destinations": {
+            "device": "このパソコン",
+            "googleDrive": "Google ドライブ",
+            "oneDrive": "OneDrive",
+            "github": "GitHub"
+        },
+        "notConfigured": "未設定",
+        "configureInSettings": "設定で構成すると利用できます。"
     },
     "history": {
         "title": "ダイアグラム履歴",

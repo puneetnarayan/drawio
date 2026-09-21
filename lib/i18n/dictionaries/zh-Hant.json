@@ -138,7 +138,19 @@
         "panelVisibilityDescription": "選擇在聊天大廳顯示哪些面板。",
         "showRecentChats": "最近聊天",
         "showMyTemplates": "我的範本",
-        "showQuickExamples": "快速範例"
+        "showQuickExamples": "快速範例",
+        "githubSave": {
+            "title": "GitHub 儲存資料夾",
+            "description": "將圖表直接儲存到 GitHub 儲存庫中的資料夾。您的權杖僅保存在此瀏覽器本機，並直接傳送給 GitHub，不會經過本應用程式的伺服器。",
+            "owner": "儲存庫擁有者",
+            "repo": "儲存庫名稱",
+            "branch": "分支（選填，預設為儲存庫的預設分支）",
+            "folder": "資料夾路徑（選填，留空則為儲存庫根目錄）",
+            "token": "個人存取權杖",
+            "tokenPlaceholder": "ghp_... 或具有 Contents 讀寫權限的細粒度權杖",
+            "save": "儲存",
+            "saved": "GitHub 儲存設定已儲存。"
+        }
     },
     "save": {
         "title": "儲存圖表",
@@ -152,7 +164,16 @@
             "svg": "SVG 圖片",
             "xmlsvg": "可編輯 SVG"
         },
-        "savedSuccessfully": "儲存成功！"
+        "savedSuccessfully": "儲存成功！",
+        "destination": "儲存到",
+        "destinations": {
+            "device": "我的電腦",
+            "googleDrive": "Google 雲端硬碟",
+            "oneDrive": "OneDrive",
+            "github": "GitHub"
+        },
+        "notConfigured": "未設定",
+        "configureInSettings": "請在設定中設定以啟用。"
     },
     "history": {
         "title": "圖表歷史",
