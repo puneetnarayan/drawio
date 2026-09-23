@@ -9,6 +9,7 @@ import { getApiEndpoint } from "@/lib/base-path"
 import { uploadToGitHub } from "@/lib/cloud-storage/github"
 import { uploadToGoogleDrive } from "@/lib/cloud-storage/google-drive"
 import { uploadToOneDrive } from "@/lib/cloud-storage/onedrive"
+import { uploadToSupabase } from "@/lib/cloud-storage/supabase"
 import {
     isGitHubSaveConfigComplete,
     type SaveDestination,
@@ -415,6 +416,10 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
                 )
             }
             await uploadToGitHub(config, filename, blob)
+            return
+        }
+        if (destination === "supabase") {
+            await uploadToSupabase(filename, blob, mimeType)
             return
         }
         throw new Error(`Unknown save destination: ${destination}`)
