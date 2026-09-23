@@ -1,4 +1,4 @@
-export type SaveDestination = "device" | "google-drive" | "onedrive" | "github"
+export type SaveDestination = "device" | "google-drive" | "onedrive" | "github" | "supabase"
 
 export interface GitHubSaveConfig {
     owner: string
