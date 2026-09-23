@@ -21,6 +21,7 @@ import {
 import { useDictionary } from "@/hooks/use-dictionary"
 import { isGoogleDriveConfigured } from "@/lib/cloud-storage/google-drive"
 import { isOneDriveConfigured } from "@/lib/cloud-storage/onedrive"
+import { isSupabaseConfigured } from "@/lib/cloud-storage/supabase"
 import {
     isGitHubSaveConfigComplete,
     type SaveDestination,
@@ -92,6 +93,11 @@ export function SaveDialog({
             value: "github",
             label: dict.save.destinations.github,
             available: isGitHubConfigured,
+        },
+        {
+            value: "supabase",
+            label: "Supabase",
+            available: isSupabaseConfigured(),
         },
     ]
     const currentDestination = DESTINATION_OPTIONS.find(
